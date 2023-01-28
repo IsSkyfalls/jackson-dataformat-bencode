@@ -17,6 +17,7 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
 
 public class TestFullDataBindingRead {
     private ObjectMapper underTest;
@@ -59,7 +60,23 @@ public class TestFullDataBindingRead {
         ObjectMapper mapper=new BEncodeMapper();
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         Assert.assertFalse(mapper.isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES));
-        Animal o = mapper.readValue("d3:agei80e4:type5:humane".getBytes(), Animal.class);
+        Animal o = mapper.readValue("d3:agei80e4:type5:humane", Animal.class);
+        Assert.assertEquals("human",o.type);
+    }
+
+    @Test
+    public void testSkipUnexpectedEOF() throws IOException{
+        ObjectMapper mapper=new BEncodeMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        Assert.assertFalse(mapper.isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES));
+        assertThrows(IOException.class,()->{
+            Animal o = mapper.readValue("d3:agei80e4:type5:human5:foodsl3:egg5:apple", Animal.class);
+            System.out.println(o);
+        });
+        assertThrows(IOException.class,()->{
+            Animal o = mapper.readValue("d3:agei80e4:type5:human5:foodsl3:egg5:applee", Animal.class);
+        });
+        Animal o = mapper.readValue("d3:agei80e4:type5:human5:foodsl3:egg5:appleee", Animal.class);
         Assert.assertEquals("human",o.type);
     }
 }

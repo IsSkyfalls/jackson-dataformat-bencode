@@ -90,7 +90,6 @@ public class BEncodeFactory extends JsonFactory {
         return createGenerator(os, enc);
     }
 
-
     @Override
     protected JsonParser _createParser(Reader r, IOContext ctxt) throws IOException{
         throw new UnsupportedOperationException("reading from Reader is not supported. Use InputStream instead.");
@@ -106,40 +105,9 @@ public class BEncodeFactory extends JsonFactory {
         return _createParser(new ByteArrayInputStream(data, offset, len), ctxt);
     }
 
-    //
-//    @Override
-//    public JsonParser createParser(String content) throws IOException{
-//        return createParser(content.getBytes(BEncodeFormat.LATIN_1));
-//    }
-//
-//    @Override
-//    public JsonParser createParser(byte[] data) throws IOException{
-//        return createParser(data, 0, data.length);
-//    }
-//
-//    @Override
-//    public JsonParser createParser(byte[] data, int offset, int len) throws IOException{
-//        return createParser(new ByteArrayInputStream(data, offset, len));
-//    }
-//
-//        @Override
-//    public JsonParser createParser(InputStream in) throws IOException{
-//        return createParser(new InputStreamReader(in));
-//    }
-//
-//
-//    public JsonParser createParser(File f) throws IOException{
-//        return createParser(new FileInputStream(f));
-//    }
-//
-//    @Override
-//    public JsonParser createParser(Reader r) throws IOException{
-//        return _createParser(r,new IOContext())
-//    }
 
-//    @Override
-//    public JsonParser createParser(URL url) throws IOException{
-//        return super.createParser(_optimizedStreamFromURL(url));
-//    }
-//
+    @Override
+    public JsonParser createParser(String content) throws IOException{
+        return createParser(content.getBytes(BEncodeFormat.LATIN_1));
+    }
 }

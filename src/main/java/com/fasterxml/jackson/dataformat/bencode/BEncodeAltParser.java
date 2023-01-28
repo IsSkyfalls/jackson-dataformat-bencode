@@ -104,17 +104,7 @@ public class BEncodeAltParser extends ParserBase {
                 if(_currToken == START_ARRAY){
                     return VALUE_STRING; // this is not kept in _currToken because the next value will still be string if 'e' is not encountered
                 }
-//                if(_currToken==VALUE_STRING){
-//                    // we might be in an array, continue
-//                    return NOT_AVAILABLE;
-//                }
                 return _currToken = FIELD_NAME;
-//                if(_currToken != FIELD_NAME){
-//                    strLen = getIntValue();
-//                    return _currToken = FIELD_NAME;
-//                } else {
-//
-//                }
         }
     }
 
@@ -128,7 +118,9 @@ public class BEncodeAltParser extends ParserBase {
         } else if(_currToken == START_ARRAY || _currToken == START_OBJECT){
             int layer = 1;
             do {
-                switch (in.read()) {
+                in.mark(1);
+                int c=in.read();
+                switch (c) {
                     case 'i':
                     case 'l':
                     case 'd':
@@ -137,6 +129,14 @@ public class BEncodeAltParser extends ParserBase {
                     case 'e':
                         layer--;
                         break;
+                    case -1:
+                        throw new IOException("unexpected EOF");
+                    default:
+                        // handle text containing e
+                        if(c>='0'&&c<='9'){
+                            in.reset();
+                            getBinaryValue(null);
+                        }
                 }
             } while (layer > 0);
         }
@@ -195,71 +195,4 @@ public class BEncodeAltParser extends ParserBase {
         super._parseNumericValue(expType);
         _currToken = tmp;
     }
-
-    //    @Override
-//    public int getIntValue() throws IOException{
-//        _parseNumericValue(0);
-//        return super.getIntValue();
-//    }
-//
-//    @Override
-//    public long getLongValue() throws IOException{
-//        return super.getLongValue();
-//    }
-
-//    @Override
-//    protected void _parseNumericValue(int expType) throws IOException{
-//        r.mark(MAX_LONG_STR.length + 2);
-//        int len = r.read(tokenBuf, 0, tokenBuf.length);
-//        if(len == -1){
-//            _reportError("EOF reached unexpectedly");
-//        }
-//        for (int i = 0; i < len; i++) {
-//            if(tokenBuf[i] == 'e' || tokenBuf[i] == ':'){
-//                if(i == 0){
-//                    _reportError("Empty integer value");
-//                }
-//                len = i;
-//                break;
-//            }
-//        }
-//        int offset = 0;
-//        if(tokenBuf[0] == '-'){
-//            _numberNegative = true;
-//            offset = 1;
-//        }
-//        if(len >= MAX_LONG_STR.length){
-//            _reportError("Integer overflow. Reading BigInteger is currently not supported");
-//        }
-//        if(_numberNegative){
-//            // parseLong requires len to be between [10,18]
-//            if(len >= 10){
-//                _numberLong = -NumberInput.parseLong(tokenBuf, offset, len);
-//                if(_numberLong > MIN_INT_L){
-//                    _numberInt = (int) _numberLong;
-//                    _numTypesValid = NR_INT;
-//                } else {
-//                    _numTypesValid = NR_LONG;
-//                }
-//            } else {
-//                _numberInt = -NumberInput.parseInt(tokenBuf, offset, len);
-//                _numTypesValid = NR_INT;
-//            }
-//        } else {
-//            if(len >= 10){
-//                _numberLong = NumberInput.parseLong(tokenBuf, offset, len);
-//                if(_numberLong < MAX_INT_L){
-//                    _numberInt = (int) _numberLong;
-//                    _numTypesValid = NR_INT;
-//                } else {
-//                    _numTypesValid = NR_LONG;
-//                }
-//            } else {
-//                _numberInt = NumberInput.parseInt(tokenBuf, offset, len);
-//                _numTypesValid = NR_INT;
-//            }
-//        }
-//        r.reset();
-//        r.skip(len + 1);
-//    }
 }
