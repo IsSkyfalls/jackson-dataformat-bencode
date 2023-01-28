@@ -1,15 +1,17 @@
 package com.fasterxml.jackson.dataformat.bencode;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.bencode.types.Animal;
 import com.fasterxml.jackson.dataformat.bencode.types.Torrent;
 import com.fasterxml.jackson.dataformat.bencode.types.User;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import sun.nio.cs.StandardCharsets;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -20,12 +22,12 @@ public class TestFullDataBindingRead {
     private ObjectMapper underTest;
 
     @Before
-    public void startUp() throws IOException {
+    public void startUp() throws IOException{
         underTest = new BEncodeMapper();
     }
 
     @Test
-    public void testReadValueFromStream() throws Exception {
+    public void testReadValueFromStream() throws Exception{
         InputStream in = new ByteArrayInputStream(TestUtils.TUTORIAL_EXAMPLE_ENCODED.getBytes("ISO-8859-1"));
         User u = underTest.readValue(in, User.class);
         assertThat(u.getGender(), is(User.Gender.MALE));
@@ -36,7 +38,7 @@ public class TestFullDataBindingRead {
     }
 
     @Test
-    public void testReadComplexValue() throws Exception {
+    public void testReadComplexValue() throws Exception{
         Torrent ubuntu = underTest.readValue(
                 new File("src/test/resources/ubuntu-13.10-desktop-amd64.iso.torrent"), Torrent.class);
         assertThat(ubuntu.getAnnounce(), is("http://torrent.ubuntu.com:6969/announce"));
@@ -50,5 +52,14 @@ public class TestFullDataBindingRead {
         assertThat(ubuntu.getInfo().getLength(), is(925892608L));
         assertThat(ubuntu.getInfo().getPieceLength(), is(524288));
         assertThat(ubuntu.getInfo().getPieces().length, is(35320));
+    }
+
+    @Test
+    public void testReadUnknownField() throws IOException{
+        ObjectMapper mapper=new BEncodeMapper();
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        Assert.assertFalse(mapper.isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES));
+        Animal o = mapper.readValue("d3:agei80e4:type5:humane".getBytes(), Animal.class);
+        Assert.assertEquals("human",o.type);
     }
 }

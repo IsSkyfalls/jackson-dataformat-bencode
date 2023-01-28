@@ -1,24 +1,12 @@
 package com.fasterxml.jackson.dataformat.bencode;
 
-import com.fasterxml.jackson.core.FormatSchema;
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.format.InputAccessor;
 import com.fasterxml.jackson.core.format.MatchStrength;
+import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.dataformat.bencode.context.StreamOutputContext;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
 
@@ -29,46 +17,46 @@ public class BEncodeFactory extends JsonFactory {
      */
     public final static String FORMAT_NAME_JSON = "BEncode";
 
-    public BEncodeFactory() {
+    public BEncodeFactory(){
         this(null);
     }
 
-    public BEncodeFactory(ObjectCodec oc) {
+    public BEncodeFactory(ObjectCodec oc){
         super(oc);
     }
 
-    public BEncodeFactory(BEncodeFactory src, ObjectCodec codec) {
+    public BEncodeFactory(BEncodeFactory src, ObjectCodec codec){
         super(src, codec);
     }
 
     @Override
-    public BEncodeFactory copy() {
+    public BEncodeFactory copy(){
         _checkInvalidCopy(BEncodeFactory.class);
         return new BEncodeFactory(this, null);
     }
 
     @Override
-    protected Object readResolve() {
+    protected Object readResolve(){
         return new BEncodeFactory(this, _objectCodec);
     }
 
     @Override
-    public Version version() {
+    public Version version(){
         return PackageVersion.VERSION;
     }
 
     @Override
-    public boolean canHandleBinaryNatively() {
+    public boolean canHandleBinaryNatively(){
         return true;
     }
 
     @Override
-    public String getFormatName() {
+    public String getFormatName(){
         return FORMAT_NAME_JSON;
     }
 
     @Override
-    public MatchStrength hasFormat(InputAccessor acc) throws IOException {
+    public MatchStrength hasFormat(InputAccessor acc) throws IOException{
         // TODO implement according to com.fasterxml.jackson.core.json.ByteSourceJsonBootstrapper.hasJSONFormat()
         return MatchStrength.INCONCLUSIVE;
 //        if (!acc.hasMoreBytes()) {
@@ -77,62 +65,81 @@ public class BEncodeFactory extends JsonFactory {
     }
 
     @Override
-    public boolean canUseSchema(FormatSchema schema) {
+    public boolean canUseSchema(FormatSchema schema){
         return super.canUseSchema(schema);
     }
 
     @Override
-    public BEncodeGenerator createGenerator(OutputStream out, JsonEncoding enc) throws IOException {
+    public BEncodeGenerator createGenerator(OutputStream out, JsonEncoding enc) throws IOException{
         return new BEncodeGenerator(0, _objectCodec, new StreamOutputContext(out, Charset.forName(enc.getJavaName()))); // TODO handle features
     }
 
     @Override
-    public BEncodeGenerator createGenerator(OutputStream out) throws IOException {
+    public BEncodeGenerator createGenerator(OutputStream out) throws IOException{
         return createGenerator(out, JsonEncoding.UTF8);
     }
 
     @Override
-    public BEncodeGenerator createGenerator(Writer out) throws IOException {
+    public BEncodeGenerator createGenerator(Writer out) throws IOException{
         throw new UnsupportedOperationException("BEncode doesn't support writer");
     }
 
     @Override
-    public BEncodeGenerator createGenerator(File f, JsonEncoding enc) throws IOException {
+    public BEncodeGenerator createGenerator(File f, JsonEncoding enc) throws IOException{
         OutputStream os = new FileOutputStream(f); // , enc.getJavaName())
         return createGenerator(os, enc);
     }
 
-    @Override
-    public JsonParser createParser(InputStream in) throws IOException {
-        return new BEncodeParser(in, _objectCodec);
-    }
 
-    public JsonParser createParser(File f) throws IOException {
-        return createParser(new FileInputStream(f));
+    @Override
+    protected JsonParser _createParser(Reader r, IOContext ctxt) throws IOException{
+        throw new UnsupportedOperationException("reading from Reader is not supported. Use InputStream instead.");
     }
 
     @Override
-    public JsonParser createParser(Reader r) throws IOException {
-        throw new UnsupportedOperationException("BEncode doesn't support reader");
+    protected JsonParser _createParser(InputStream in, IOContext ctxt) throws IOException{
+        return new BEncodeAltParser(new BufferedInputStream(in), ctxt);
     }
 
     @Override
-    public JsonParser createParser(String content) throws IOException {
-        return super.createParser(content.getBytes(BEncodeFormat.LATIN_1));
+    protected JsonParser _createParser(byte[] data, int offset, int len, IOContext ctxt) throws IOException, JsonParseException{
+        return _createParser(new ByteArrayInputStream(data, offset, len), ctxt);
     }
 
-    @Override
-    public JsonParser createParser(byte[] data, int offset, int len) throws IOException {
-        return createParser(new ByteArrayInputStream(data, offset, len));
-    }
+    //
+//    @Override
+//    public JsonParser createParser(String content) throws IOException{
+//        return createParser(content.getBytes(BEncodeFormat.LATIN_1));
+//    }
+//
+//    @Override
+//    public JsonParser createParser(byte[] data) throws IOException{
+//        return createParser(data, 0, data.length);
+//    }
+//
+//    @Override
+//    public JsonParser createParser(byte[] data, int offset, int len) throws IOException{
+//        return createParser(new ByteArrayInputStream(data, offset, len));
+//    }
+//
+//        @Override
+//    public JsonParser createParser(InputStream in) throws IOException{
+//        return createParser(new InputStreamReader(in));
+//    }
+//
+//
+//    public JsonParser createParser(File f) throws IOException{
+//        return createParser(new FileInputStream(f));
+//    }
+//
+//    @Override
+//    public JsonParser createParser(Reader r) throws IOException{
+//        return _createParser(r,new IOContext())
+//    }
 
-    @Override
-    public JsonParser createParser(URL url) throws IOException {
-        return super.createParser(_optimizedStreamFromURL(url));
-    }
-
-    @Override
-    public JsonParser createParser(byte[] data) throws IOException {
-        return createParser(data, 0, data.length);
-    }
+//    @Override
+//    public JsonParser createParser(URL url) throws IOException{
+//        return super.createParser(_optimizedStreamFromURL(url));
+//    }
+//
 }
