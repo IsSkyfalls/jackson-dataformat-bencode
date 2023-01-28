@@ -76,7 +76,7 @@ public class TestFullDataBindingRead {
         assertThrows(IOException.class,()->{
             Animal o = mapper.readValue("d3:agei80e4:type5:human5:foodsl3:egg5:applee", Animal.class);
         });
-        Animal o = mapper.readValue("d3:agei80e4:type5:human5:foodsl3:egg5:appleee", Animal.class);
+        Animal o = mapper.readValue("d3:agei80e4:name3:amy4:cityd2:idi1e4:name5:Tokyoe4:type5:human5:foodsl3:egg5:appleee", Animal.class);
         Assert.assertEquals("human",o.type);
     }
 }

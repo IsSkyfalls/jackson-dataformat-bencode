@@ -81,16 +81,17 @@ public class BEncodeAltParser extends ParserBase {
                 return _currToken = VALUE_NUMBER_INT;
             case 'e':
                 _currToken = stack.pop();
+                // this wont actually happen, since nextToken is not called when the whole object is done, after the last END_OBJECT;
                 if(_currToken == null){
                     _reportError("ran out of nested layers");
                 }
                 switch (_currToken) {
                     case START_OBJECT:
-                        return _currToken = JsonToken.END_OBJECT;
+                        return _currToken = END_OBJECT;
                     case START_ARRAY:
-                        return _currToken = JsonToken.END_ARRAY;
+                        return _currToken = END_ARRAY;
                     default:
-                        throw new RuntimeException("invalid prev state");
+                        throw new RuntimeException("invalid prev state"); // sanity check
                 }
             case -1:
                 if(stack.size() != 0){
@@ -111,7 +112,7 @@ public class BEncodeAltParser extends ParserBase {
     @Override
     public JsonParser skipChildren() throws IOException{
         if(_currToken == VALUE_STRING){
-            in.skip(strLen);
+            getBinaryValue(null);
         } else if(_currToken == VALUE_NUMBER_INT){
             // _parseNumericValue has already been called in nextToken
             // the integer was consumed there
