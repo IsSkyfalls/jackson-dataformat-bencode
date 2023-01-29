@@ -31,16 +31,9 @@ public class BEncodeAltParser extends ParserBase {
 
     private final byte[] byteBuf;
 
+    private final char[] charBuf;
+
     private final Stack<JsonToken> stack = new Stack<>();
-//
-//    protected BEncodeAltParser(Reader r, ObjectCodec codec, IOContext ctx, int features){
-//        super(ctx, features);
-//        this.in = r;
-//        this.codec = codec;
-//        // one for sign(+/-), and one for end_marker(e)
-//        tokenBuf = ctx.allocTokenBuffer(MAX_LONG_STR.length + 2);
-//        byteBuf = ctx.allocReadIOBuffer();
-//    }
 
     protected BEncodeAltParser(InputStream in, IOContext ctx){
         super(ctx, 0);
@@ -48,6 +41,7 @@ public class BEncodeAltParser extends ParserBase {
         // one for sign(+/-), and one for end_marker(e)
         // though this buffer is usually much larger
         byteBuf = ctx.allocReadIOBuffer(MAX_LONG_STR.length + 2);
+        charBuf = ctx.allocConcatBuffer();
     }
 
     @Override
@@ -120,7 +114,7 @@ public class BEncodeAltParser extends ParserBase {
             int layer = 1;
             do {
                 in.mark(1);
-                int c=in.read();
+                int c = in.read();
                 switch (c) {
                     case 'i':
                     case 'l':
@@ -134,7 +128,7 @@ public class BEncodeAltParser extends ParserBase {
                         throw new IOException("unexpected EOF");
                     default:
                         // handle text containing e
-                        if(c>='0'&&c<='9'){
+                        if(c >= '0' && c <= '9'){
                             in.reset();
                             getBinaryValue(null);
                         }
@@ -187,12 +181,12 @@ public class BEncodeAltParser extends ParserBase {
     protected void _parseNumericValue(int expType) throws IOException{
         JsonToken tmp = _currToken;
         _currToken = VALUE_NUMBER_INT;
-        _textBuffer.setCurrentLength(0);
+        _textBuffer.resetWithShared(charBuf, 0, 0);
         int c;
         while ((c = in.read()) != ':' && c != 'e' && c != -1) {
             _textBuffer.append((char) c);
         }
-        _intLength=_textBuffer.size();
+        _intLength = _textBuffer.size();
         super._parseNumericValue(expType);
         _currToken = tmp;
     }
